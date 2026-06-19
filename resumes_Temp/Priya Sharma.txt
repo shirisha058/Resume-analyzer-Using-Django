@@ -1,0 +1,8 @@
+Priya Sharma
+5 yrs exp · MCA, Pune University
+Skills
+ReactNode.jsTypeScriptREST APIsMongoDBAWS (EC2, S3)DockerFigma
+Experience
+Full Stack Developer @ Wipro (4 yrs) — led team of 4 to build SaaS dashboard (10k+ users), reduced page load by 40% via code-splitting. Freelance — 3 e-commerce websites.
+Projects
+Real-time chat app (Socket.io) · Portfolio CMS · Open-source contributions to React ecosystem

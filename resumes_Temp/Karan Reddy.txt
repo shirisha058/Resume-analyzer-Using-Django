@@ -1,0 +1,8 @@
+Karan Reddy
+4 yrs exp · B.Tech IT, JNTU Hyderabad
+Skills
+AWS (Lambda, RDS, ECS)TerraformKubernetesCI/CD (Jenkins)LinuxBashPrometheusGrafana
+Experience
+DevOps Engineer @ HCL Technologies (3 yrs) — maintained 99.9% uptime across 20+ microservices, automated infra provisioning with Terraform. Intern @ Wipro — Linux administration.
+Projects
+Zero-downtime deployment pipeline · Multi-region AWS infra setup · Kubernetes cluster monitoring

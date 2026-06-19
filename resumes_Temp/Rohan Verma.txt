@@ -1,0 +1,8 @@
+Rohan Verma
+1 yr exp + internships · B.E. Electronics, VTU
+Skills
+JavaSpring BootMySQLSeleniumTestNGPostmanJIRA
+Experience
+QA Engineer @ Mindtree (1 yr) — wrote 300+ automated test cases, reduced regression cycle by 60%. Intern @ Accenture — manual testing for banking application.
+Projects
+Inventory management system (Spring Boot) · Bug tracker clone · Library management app

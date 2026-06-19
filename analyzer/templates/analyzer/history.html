@@ -1,0 +1,141 @@
+{% extends 'analyzer/base.html' %}
+{% block title %}History — ResumeIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header { padding: 60px 0 40px; }
+.page-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.2rem; font-weight: 800;
+  letter-spacing: -0.03em; margin-bottom: 8px;
+}
+.page-header p { color: var(--text2); }
+
+.history-table {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 60px;
+}
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr 100px;
+  padding: 14px 24px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr 100px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background 0.15s;
+}
+.table-row:last-child { border-bottom: none; }
+.table-row:hover { background: rgba(255,255,255,0.025); }
+
+.file-name { font-weight: 500; font-size: 0.9rem; margin-bottom: 3px; }
+.job-name { font-size: 0.8rem; color: var(--text3); }
+.score-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 60px; height: 30px;
+  border-radius: 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.pill-excellent { background: rgba(52,211,153,0.12); color: #34d399; }
+.pill-good { background: rgba(56,189,248,0.12); color: #38bdf8; }
+.pill-average { background: rgba(251,191,36,0.12); color: #fbbf24; }
+.pill-low { background: rgba(248,113,113,0.12); color: #f87171; }
+.date-cell { font-size: 0.82rem; color: var(--text3); }
+.actions-cell { display: flex; gap: 8px; justify-content: flex-end; }
+.icon-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  background: transparent;
+  cursor: pointer;
+}
+.icon-btn:hover { background: var(--card-hover); border-color: var(--border-hover); }
+.icon-btn-del:hover { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.3); }
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+.empty-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.4; }
+.empty-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;
+}
+.empty-text { color: var(--text2); margin-bottom: 24px; }
+
+@media (max-width: 768px) {
+  .table-header, .table-row {
+    grid-template-columns: 1fr auto auto;
+  }
+  .table-header .h-date, .table-header .h-skills,
+  .table-row .date-cell, .table-row .skills-cell { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header fade-up">
+    <div class="section-label">All analyses</div>
+    <h1>Analysis history</h1>
+    <p>{{ analyses|length }} resume{% if analyses|length != 1 %}s{% endif %} analyzed</p>
+  </div>
+
+  {% if analyses %}
+  <div class="history-table fade-up-2">
+    <div class="table-header">
+      <div>Resume</div>
+      <div>Job title</div>
+      <div>Score</div>
+      <div class="h-date">Date</div>
+      <div></div>
+    </div>
+    {% for a in analyses %}
+    <div class="table-row">
+      <div>
+        <div class="file-name">{{ a.resume_filename }}</div>
+        <div class="job-name">{{ a.job_description|truncatechars:60 }}</div>
+      </div>
+      <div style="font-size:0.88rem;color:var(--text2)">
+        {{ a.job_title|default:"—" }}
+      </div>
+      <div>
+        <span class="score-pill pill-{{ a.get_score_level }}">{{ a.match_score }}%</span>
+      </div>
+      <div class="date-cell">{{ a.created_at|date:"M d, Y" }}</div>
+      <div class="actions-cell">
+        <a href="/result/{{ a.pk }}/" class="icon-btn" title="View result">👁</a>
+        <a href="/delete/{{ a.pk }}/" class="icon-btn icon-btn-del" title="Delete" onclick="return confirm('Delete?')">🗑</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state fade-up">
+    <div class="empty-icon">📭</div>
+    <div class="empty-title">No analyses yet</div>
+    <div class="empty-text">Upload your first resume to get started.</div>
+    <a href="/" class="btn btn-primary">⚡ Analyze a resume</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

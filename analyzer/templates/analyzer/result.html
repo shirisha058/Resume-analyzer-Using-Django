@@ -1,0 +1,296 @@
+{% extends 'analyzer/base.html' %}
+{% block title %}Analysis Result — ResumeIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+.result-hero {
+  padding: 60px 0 40px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 40px;
+  align-items: start;
+}
+@media (max-width: 640px) { .result-hero { grid-template-columns: 1fr; } }
+
+.result-meta { font-size: 0.85rem; color: var(--text3); margin-bottom: 12px; display: flex; gap: 16px; flex-wrap: wrap; }
+.result-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.result-sub { color: var(--text2); font-size: 0.95rem; }
+
+/* Score ring */
+.score-ring-wrap { text-align: center; min-width: 160px; }
+.score-ring {
+  position: relative; width: 160px; height: 160px; margin: 0 auto 12px;
+}
+.score-ring svg { transform: rotate(-90deg); }
+.score-ring .track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 10; }
+.score-ring .fill {
+  fill: none; stroke-width: 10; stroke-linecap: round;
+  stroke-dasharray: 408;
+  stroke-dashoffset: 408;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.score-ring .fill.excellent { stroke: #34d399; }
+.score-ring .fill.good { stroke: #38bdf8; }
+.score-ring .fill.average { stroke: #fbbf24; }
+.score-ring .fill.low { stroke: #f87171; }
+.score-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.score-number {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.4rem; font-weight: 800;
+  letter-spacing: -0.04em;
+}
+.score-pct { font-size: 0.85rem; color: var(--text3); }
+.score-excellent .score-number { color: #34d399; }
+.score-good .score-number { color: #38bdf8; }
+.score-average .score-number { color: #fbbf24; }
+.score-low .score-number { color: #f87171; }
+.score-label-text { font-size: 0.85rem; font-weight: 500; color: var(--text2); }
+
+/* Content grid */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 768px) { .content-grid { grid-template-columns: 1fr; } }
+
+.section-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+}
+.section-card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.skills-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.skill-chip {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: transform 0.15s;
+}
+.skill-chip:hover { transform: translateY(-1px); }
+.skill-matched { background: rgba(52,211,153,0.1); color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
+.skill-missing { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
+.skill-none { color: var(--text3); font-size: 0.88rem; }
+
+/* Recommendation */
+.rec-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+.rec-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.rec-card.excellent::before { background: linear-gradient(90deg, #34d399, #059669); }
+.rec-card.good::before { background: linear-gradient(90deg, #38bdf8, #0284c7); }
+.rec-card.average::before { background: linear-gradient(90deg, #fbbf24, #d97706); }
+.rec-card.low::before { background: linear-gradient(90deg, #f87171, #dc2626); }
+
+.rec-icon { font-size: 2.5rem; margin-bottom: 14px; }
+.rec-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem; font-weight: 700;
+  margin-bottom: 10px;
+}
+.rec-text { color: var(--text2); line-height: 1.75; font-size: 0.97rem; }
+
+/* Progress bars */
+.progress-row { margin-bottom: 12px; }
+.progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 0.85rem; color: var(--text2); margin-bottom: 6px;
+}
+.progress-bar {
+  height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 3px;
+  width: 0;
+  transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.actions { display: flex; gap: 12px; flex-wrap: wrap; padding-bottom: 60px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="result-hero fade-up">
+    <div>
+      <div class="result-meta">
+        <span>📄 {{ analysis.resume_filename }}</span>
+        {% if analysis.job_title %}<span>💼 {{ analysis.job_title }}</span>{% endif %}
+        <span>🕐 {{ analysis.created_at|date:"M d, Y · H:i" }}</span>
+      </div>
+      <div class="result-title">Analysis complete</div>
+      <div class="result-sub">Here's how well your resume matches the job description.</div>
+    </div>
+
+    <div class="score-ring-wrap fade-up-2">
+      <div class="score-ring">
+        <svg viewBox="0 0 140 140" width="160" height="160">
+          <circle class="track" cx="70" cy="70" r="65"/>
+          <circle class="fill {{ level }}" cx="70" cy="70" r="65" id="scoreFill"/>
+        </svg>
+        <div class="score-center score-{{ level }}">
+          <div class="score-number" id="scoreNum">0</div>
+          <div class="score-pct">%</div>
+        </div>
+      </div>
+      <div class="score-label-text">
+        {% if level == 'excellent' %}Excellent match{% elif level == 'good' %}Good match{% elif level == 'average' %}Average match{% else %}Low match{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendation -->
+  <div class="rec-card {{ level }} fade-up">
+    <div class="rec-icon">
+      {% if level == 'excellent' %}🎯{% elif level == 'good' %}👍{% elif level == 'average' %}📈{% else %}⚠️{% endif %}
+    </div>
+    <div class="rec-title">Our recommendation</div>
+    <div class="rec-text">{{ analysis.recommendation }}</div>
+  </div>
+
+  <!-- Skills & Stats -->
+  <div class="content-grid fade-up-2">
+
+    <!-- Matched skills -->
+    <div class="section-card">
+      <div class="section-card-title">
+        <span style="width:28px;height:28px;background:rgba(52,211,153,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px">✅</span>
+        Matched skills
+        <span class="badge badge-green">{{ matched|length }}</span>
+      </div>
+      <div class="skills-wrap">
+        {% for skill in matched %}
+        <span class="skill-chip skill-matched">{{ skill }}</span>
+        {% empty %}
+        <span class="skill-none">No common skills detected</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Missing skills -->
+    <div class="section-card">
+      <div class="section-card-title">
+        <span style="width:28px;height:28px;background:rgba(248,113,113,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px">❌</span>
+        Missing skills
+        <span class="badge badge-red">{{ missing|length }}</span>
+      </div>
+      <div class="skills-wrap">
+        {% for skill in missing %}
+        <span class="skill-chip skill-missing">{{ skill }}</span>
+        {% empty %}
+        <span class="skill-none">No skill gaps detected</span>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Score breakdown -->
+  <div class="section-card fade-up-3" style="margin-bottom:16px">
+    <div class="section-card-title">
+      <span style="width:28px;height:28px;background:rgba(108,99,255,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px">📊</span>
+      Score breakdown
+    </div>
+    <div class="progress-row">
+      <div class="progress-label"><span>Overall match</span><span>{{ analysis.match_score }}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="pb1" style="background:{% if level == 'excellent' %}#34d399{% elif level == 'good' %}#38bdf8{% elif level == 'average' %}#fbbf24{% else %}#f87171{% endif %}"></div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label">
+        <span>Skill coverage</span>
+        <span>{% if matched and missing %}{{ matched|length }} / {{ matched|length|add:missing|length }}{% elif matched %}{{ matched|length }} / {{ matched|length }}{% else %}0{% endif %}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="pb2" style="background:#a78bfa"></div></div>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:24px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:0.78rem;color:var(--text3);margin-bottom:3px">Analysis method</div>
+        <span class="badge badge-purple">RoBERTa + TF-IDF</span>
+      </div>
+      <div>
+        <div style="font-size:0.78rem;color:var(--text3);margin-bottom:3px">Resume file</div>
+        <span class="badge badge-blue">{{ analysis.resume_filename }}</span>
+      </div>
+      {% if analysis.job_title %}
+      <div>
+        <div style="font-size:0.78rem;color:var(--text3);margin-bottom:3px">Target role</div>
+        <span class="badge badge-purple">{{ analysis.job_title }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions fade-up-3">
+    <a href="/" class="btn btn-primary">⚡ Analyze another resume</a>
+    <a href="/history/" class="btn btn-outline">📋 View history</a>
+    <a href="/delete/{{ analysis.pk }}/" class="btn btn-danger" onclick="return confirm('Delete this analysis?')">🗑 Delete</a>
+  </div>
+
+</div>
+
+<script>
+const score = {{ analysis.match_score }};
+const level = '{{ level }}';
+const circumference = 408;
+
+// Animate score number
+let current = 0;
+const target = score;
+const duration = 1500;
+const start = performance.now();
+function animateNum(now) {
+  const elapsed = now - start;
+  const progress = Math.min(elapsed / duration, 1);
+  const ease = 1 - Math.pow(1 - progress, 3);
+  current = Math.round(ease * target);
+  document.getElementById('scoreNum').textContent = current;
+  if (progress < 1) requestAnimationFrame(animateNum);
+}
+requestAnimationFrame(animateNum);
+
+// Animate ring
+const fill = document.getElementById('scoreFill');
+const offset = circumference - (score / 100) * circumference;
+requestAnimationFrame(() => {
+  setTimeout(() => { fill.style.strokeDashoffset = offset; }, 100);
+});
+
+// Animate progress bars
+const matchedCount = {{ matched|length }};
+const totalSkills = {{ matched|length }} + {{ missing|length }};
+const skillPct = totalSkills > 0 ? Math.round((matchedCount / totalSkills) * 100) : 0;
+
+setTimeout(() => {
+  document.getElementById('pb1').style.width = score + '%';
+  document.getElementById('pb2').style.width = skillPct + '%';
+}, 200);
+</script>
+{% endblock %}

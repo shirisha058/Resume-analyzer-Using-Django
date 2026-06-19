@@ -1,0 +1,8 @@
+Aarav Kumar
+3 yrs exp · B.Tech Computer Science, BITS Pilani
+Skills
+PythonMachine LearningTensorFlowScikit-learnSQLPandasNumPyGit
+Experience
+Junior Data Scientist @ Infosys (2 yrs) — built churn prediction models (85% accuracy), automated ETL pipelines using Apache Spark. Intern @ TCS — NLP sentiment analysis for customer feedback.
+Projects
+Resume parser using spaCy · Stock price predictor (LSTM) · Kaggle competitions (top 15%)
